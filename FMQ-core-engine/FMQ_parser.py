@@ -1,4 +1,4 @@
-store = {}#store data
+
 
 # set 
 def handle_set(*args):
