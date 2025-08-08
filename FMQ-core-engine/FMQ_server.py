@@ -15,21 +15,43 @@ async def client_connection():
 
 
 async def fmq_buffer(reader):
-    buffer = b''
+    try:
+            
+        buffer = b''
+        client = []
+        status = True
+        await retry_handler(client,status)
+        while True:
+            chunk = await reader.read(1024)
 
-    while True:
-        chunk = await reader.read(1024)
+            if not chunk:
+                status = False
+                await retry_handler(client,status)
+                break
 
-        if not chunk:
-            break
+            buffer += chunk
 
-        buffer += chunk
+            if b'/n':
+                break
 
-        if b'/n':
-            break
+        return buffer.decode().strip()
+    
+    except Exception as e:
+        return {f"Error: fmq buffer failed: {str(e)}"}
 
-    return buffer.decode().strip()
 
+async def retry_handler(client, status):
+    try:
+ 
+        if status:
+            client.append("connected")
+        else:
+            if client:
+                client.pop(0)
+            client.append("disconnected") 
+
+    except Exception as e:
+        return {f"Error: Retry handler failed: {str(e)}"}
 
 asyncio.run(client_connection)
 
