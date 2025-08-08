@@ -1,36 +1,22 @@
 from config import Config
-import socket
+import asyncio
 import uuid
 import hashlib
-
 
 host = Config.Host
 port = Config.Port
 
 
-Fmq_server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-Fmq_server.bind(host,port)
-Fmq_server.listen()
+async def client_connection():
+    fmq_server = await asyncio.start_server(fmq_buffer, host, port )
+
+    async with fmq_server:
+        await fmq_server.serve_forever
 
 
-connection, address = Fmq_server.accept()
+async def fmq_buffer(*args) -> str:
+            ...
 
 
-def fmq_buffer(connection):
-    buffer = b''
+asyncio.run(client_connection)
 
-    while True:
-        chunk = connection.recv(1024)
-
-        if not chunk:
-            break
-
-        buffer += chunk
-
-        if b'/n':
-            break
-
-    return buffer.decode().strip()
-
-
-token = fmq_buffer(connection).split()
