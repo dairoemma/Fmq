@@ -14,8 +14,21 @@ async def client_connection():
         await fmq_server.serve_forever
 
 
-async def fmq_buffer(*args) -> str:
-            ...
+async def fmq_buffer(reader):
+    buffer = b''
+
+    while True:
+        chunk = await reader.read(1024)
+
+        if not chunk:
+            break
+
+        buffer += chunk
+
+        if b'/n':
+            break
+
+    return buffer.decode().strip()
 
 
 asyncio.run(client_connection)
